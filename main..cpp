@@ -5,6 +5,7 @@
 #include <iostream>
 #include <deque>
 #include "raylib.h"
+#include "raymath.h"
 
 Color green{ 173,204,96,255 };
 Color darkGreen{ 43,51,24,255 };
@@ -13,11 +14,27 @@ Color darkGreen{ 43,51,24,255 };
 int cellSize{ 30 };
 int cellCount{ 25 };
 
+// keep trak of time last snake update occurred
+double lastUpdateTime{ 0 };
+
+// limit snake updating to `interval` so that the speed is not to fast
+bool eventTriggered(double interval)
+{
+	double currentTime{ GetTime() };
+	if (currentTime - lastUpdateTime >= interval)
+	{
+		lastUpdateTime = currentTime;
+		return true;
+	}
+	return false;
+}
+
 class Snake
 {
 public:
 	// deque to hold all snake body segemnts
 	std::deque<Vector2> body = { Vector2{6,9}, Vector2{5,9}, Vector2{4,9} };
+	Vector2 direction{ 1, 0 };
 
 	void draw()
 	{
@@ -29,6 +46,13 @@ public:
 			Rectangle segment{ x * cellSize, y * cellSize, static_cast<float>(cellSize), static_cast<float>(cellSize) };
 			DrawRectangleRounded(segment, 0.5, 6, darkGreen);
 		}
+	}
+
+	void update()
+	{
+		// move the snake in direction specified by direction vector
+		body.pop_back();
+		body.push_front(Vector2Add(body[0], direction));
 	}
 };
 
@@ -83,8 +107,26 @@ int main()
 	while (WindowShouldClose() == false)
 	{
 		BeginDrawing();
-		ClearBackground(green);
 
+		// updating
+		if (eventTriggered(0.2))
+			snake.update();
+
+		// control the snake with keys
+		// prevent the snake from moving in the opposite direction
+		if (IsKeyPressed(KEY_W) && snake.direction.y != 1)
+			snake.direction = { 0,-1 };
+		if (IsKeyPressed(KEY_S) && snake.direction.y != -1)
+			snake.direction = { 0, 1 };
+		if (IsKeyPressed(KEY_A) && snake.direction.x != 1)
+			snake.direction = { -1, 0 };
+		if (IsKeyPressed(KEY_D) && snake.direction.x != -1)
+			snake.direction = { 1, 0 };
+		
+
+
+		// drawing
+		ClearBackground(green);
 		food.draw();
 		snake.draw();
 
