@@ -46,6 +46,8 @@ public:
 	// deque to hold all snake body segemnts
 	std::deque<Vector2> body = { Vector2{6,9}, Vector2{5,9}, Vector2{4,9} };
 	Vector2 direction{ 1, 0 };
+	// decide whether to move snake or grow snake, based on food eaten
+	bool addSegment = false;
 
 	void draw()
 	{
@@ -61,9 +63,13 @@ public:
 
 	void update()
 	{
-		// move the snake in direction specified by direction vector
-		body.pop_back();
+		// if the snake has eaten food add a segment to the body
 		body.push_front(Vector2Add(body[0], direction));
+		if (addSegment)
+			addSegment = false;
+		// else move the snake in direction specified by direction vector (pop the tail)
+		else
+			body.pop_back();
 	}
 };
 
@@ -136,6 +142,7 @@ public:
 		if (Vector2Equals(snake.body[0], food.position))
 		{
 			food.position = food.generateRandomPos(snake.body);
+			snake.addSegment = true;
 		}
 	}
 };
