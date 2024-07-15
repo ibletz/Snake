@@ -17,6 +17,17 @@ int cellCount{ 25 };
 // keep trak of time last snake update occurred
 double lastUpdateTime{ 0 };
 
+// check to prevent food appearing on snake body
+bool elementInDeque(Vector2 element, std::deque<Vector2> deque)
+{
+	for (unsigned int i = 0; i < deque.size(); i++)
+	{
+		if (Vector2Equals(deque[i], element))
+			return true;
+	}
+	return false;
+}
+
 // limit snake updating to `interval` so that the speed is not to fast
 bool eventTriggered(double interval)
 {
@@ -64,12 +75,12 @@ public:
 	Vector2 position{};
 	Texture2D texture{};
 
-	Food()
+	Food(std::deque<Vector2> snakeBody)
 	{
 		Image image{ LoadImage("graphics/food.png") };
 		texture = LoadTextureFromImage(image);
 		UnloadImage(image);
-		position = generateRandomPos();
+		position = generateRandomPos(snakeBody);
 	}
 
 	~Food()
@@ -79,28 +90,66 @@ public:
 
 	void draw()
 	{
-		DrawTexture(texture, position.x * cellSize, position.y * cellSize, WHITE);
+		DrawTexture(texture, position.x * static_cast<float>(cellSize), position.y * static_cast<float>(cellSize), WHITE);
+	}
+
+	// randomly generate a cell position
+	Vector2 generateRandomCell()
+	{
+		float x = static_cast<float>(GetRandomValue(0, static_cast<float>(cellCount) - 1.f));
+		float y = static_cast<float>(GetRandomValue(0, static_cast<float>(cellCount) - 1.f));
+		return Vector2{ x, y };
 	}
 
 	// randomly position the food
-	Vector2 generateRandomPos()
+	Vector2 generateRandomPos(std::deque<Vector2> snakeBody)
 	{
-		float x = GetRandomValue(0, cellCount - 1);
-		float y = GetRandomValue(0, cellCount - 1);
-		return Vector2{ x, y };
+		Vector2 position{ generateRandomCell() };
+		while (elementInDeque(position, snakeBody))
+			position = generateRandomCell();
+		return position;
+	}
+};
+
+// class that handles game state
+class Game
+{
+public:
+	Snake snake{};
+	Food food{snake.body};
+
+	void draw()
+	{
+		food.draw();
+		snake.draw();
+	}
+
+	void update()
+	{
+		snake.update();
+		checkCollisionWithFood();
+	}
+
+	// collision check snake head with food (snake eats food)
+	void checkCollisionWithFood()
+	{
+		if (Vector2Equals(snake.body[0], food.position))
+		{
+			food.position = food.generateRandomPos(snake.body);
+		}
 	}
 };
 
 int main()
 {
+	std::cout.flush();
 	std::cout << "Starting the game..." << '\n';
 
 	InitWindow(cellSize * cellCount, cellSize * cellCount, "raylib Snake");
-
-	Food food{};
-	Snake snake{};
-
 	SetTargetFPS(60);
+
+	Game game{};
+
 	/*----------------------------------------------------*/
 	/* game loop starts here							  */
 	/*----------------------------------------------------*/
@@ -110,26 +159,23 @@ int main()
 
 		// updating
 		if (eventTriggered(0.2))
-			snake.update();
+			game.update();
 
 		// control the snake with keys
 		// prevent the snake from moving in the opposite direction
-		if (IsKeyPressed(KEY_W) && snake.direction.y != 1)
-			snake.direction = { 0,-1 };
-		if (IsKeyPressed(KEY_S) && snake.direction.y != -1)
-			snake.direction = { 0, 1 };
-		if (IsKeyPressed(KEY_A) && snake.direction.x != 1)
-			snake.direction = { -1, 0 };
-		if (IsKeyPressed(KEY_D) && snake.direction.x != -1)
-			snake.direction = { 1, 0 };
-		
+		if (IsKeyPressed(KEY_W) && game.snake.direction.y != 1)
+			game.snake.direction = { 0,-1 };
+		if (IsKeyPressed(KEY_S) && game.snake.direction.y != -1)
+			game.snake.direction = { 0, 1 };
+		if (IsKeyPressed(KEY_A) && game.snake.direction.x != 1)
+			game.snake.direction = { -1, 0 };
+		if (IsKeyPressed(KEY_D) && game.snake.direction.x != -1)
+			game.snake.direction = { 1, 0 };
 
 
 		// drawing
 		ClearBackground(green);
-		food.draw();
-		snake.draw();
-
+		game.draw();
 
 		EndDrawing();
 	}
