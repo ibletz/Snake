@@ -130,8 +130,9 @@ class Game
 {
 public:
 	Snake snake{};
-	Food food{snake.body};
+	Food food{ snake.body };
 	bool running{ true };
+	int score{ 0 };
 
 	void draw()
 	{
@@ -157,6 +158,7 @@ public:
 		{
 			food.position = food.generateRandomPos(snake.body);
 			snake.addSegment = true;
+			score++;
 		}
 	}
 
@@ -169,7 +171,7 @@ public:
 			snake.body[0].y == -1)
 			gameOver();
 	}
-	
+
 	// check if the snake collides with itself
 	void checkCollisionWithTail()
 	{
@@ -184,13 +186,14 @@ public:
 		snake.reset();
 		food.position = food.generateRandomPos(snake.body);
 		running = false;
+		score = 0;
 	}
 
 };
 
 int main()
 {
-	InitWindow(2*offset + cellSize * cellCount, 2*offset + cellSize * cellCount, "raylib Snake");
+	InitWindow(2 * offset + cellSize * cellCount, 2 * offset + cellSize * cellCount, "Retro Snake");
 	SetTargetFPS(60);
 
 	Game game{};
@@ -236,6 +239,8 @@ int main()
 										static_cast<float>(offset) - 5,
 										static_cast<float>(cellSize) * cellCount + 10,
 										static_cast<float>(cellSize) * cellCount + 10 }, 5, darkGreen);
+		DrawText("Retro Snake", offset - 5, 20, 40, darkGreen);
+		DrawText(TextFormat("%i",game.score), offset - 5, offset + cellSize * cellCount + 10, 40, darkGreen);
 		game.draw();
 
 		EndDrawing();
