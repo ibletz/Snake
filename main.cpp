@@ -133,6 +133,23 @@ public:
 	Food food{ snake.body };
 	bool running{ true };
 	int score{ 0 };
+	Sound eatSound{};
+	Sound wallSound{};
+
+	Game()
+	{
+		// initalize the audio for game
+		InitAudioDevice();
+		eatSound = LoadSound("Sounds/Sounds_eat.mp3");
+		wallSound = LoadSound("Sounds/Sounds_wall.mp3");
+	}
+
+	~Game()
+	{
+		UnloadSound(eatSound);
+		UnloadSound(wallSound);
+		CloseAudioDevice();
+	}
 
 	void draw()
 	{
@@ -159,6 +176,7 @@ public:
 			food.position = food.generateRandomPos(snake.body);
 			snake.addSegment = true;
 			score++;
+			PlaySound(eatSound);
 		}
 	}
 
@@ -187,6 +205,7 @@ public:
 		food.position = food.generateRandomPos(snake.body);
 		running = false;
 		score = 0;
+		PlaySound(wallSound);
 	}
 
 };
