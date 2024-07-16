@@ -13,6 +13,8 @@ Color darkGreen{ 43,51,24,255 };
 // define size of game grid
 int cellSize{ 30 };
 int cellCount{ 25 };
+// offest for game border
+int offset{ 75 };
 
 // keep trak of time last snake update occurred
 double lastUpdateTime{ 0 };
@@ -56,7 +58,7 @@ public:
 		{
 			float x = body[i].x;
 			float y = body[i].y;
-			Rectangle segment{ x * cellSize, y * cellSize, static_cast<float>(cellSize), static_cast<float>(cellSize) };
+			Rectangle segment{ offset + x * cellSize, offset + y * cellSize, static_cast<float>(cellSize), static_cast<float>(cellSize) };
 			DrawRectangleRounded(segment, 0.5, 6, darkGreen);
 		}
 	}
@@ -102,7 +104,7 @@ public:
 
 	void draw()
 	{
-		DrawTexture(texture, position.x * static_cast<float>(cellSize), position.y * static_cast<float>(cellSize), WHITE);
+		DrawTexture(texture, offset + position.x * static_cast<float>(cellSize), offset + position.y * static_cast<float>(cellSize), WHITE);
 	}
 
 	// randomly generate a cell position
@@ -188,7 +190,7 @@ public:
 
 int main()
 {
-	InitWindow(cellSize * cellCount, cellSize * cellCount, "raylib Snake");
+	InitWindow(2*offset + cellSize * cellCount, 2*offset + cellSize * cellCount, "raylib Snake");
 	SetTargetFPS(60);
 
 	Game game{};
@@ -230,6 +232,10 @@ int main()
 
 		// drawing
 		ClearBackground(green);
+		DrawRectangleLinesEx(Rectangle{ static_cast<float>(offset) - 5,
+										static_cast<float>(offset) - 5,
+										static_cast<float>(cellSize) * cellCount + 10,
+										static_cast<float>(cellSize) * cellCount + 10 }, 5, darkGreen);
 		game.draw();
 
 		EndDrawing();
