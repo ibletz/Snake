@@ -71,6 +71,12 @@ public:
 		else
 			body.pop_back();
 	}
+
+	void reset()
+	{
+		body = { Vector2{6, 9}, Vector2{5, 9}, Vector2{4, 9} };
+		direction = { 1, 0 };
+	}
 };
 
 class Food
@@ -123,6 +129,7 @@ class Game
 public:
 	Snake snake{};
 	Food food{snake.body};
+	bool running{ true };
 
 	void draw()
 	{
@@ -132,8 +139,13 @@ public:
 
 	void update()
 	{
-		snake.update();
-		checkCollisionWithFood();
+		if (running)
+		{
+			snake.update();
+			checkCollisionWithFood();
+			checkCollisionWithEdges();
+			checkCollisionWithTail();
+		}
 	}
 
 	// collision check snake head with food (snake eats food)
@@ -145,13 +157,37 @@ public:
 			snake.addSegment = true;
 		}
 	}
+
+	// check if the snake head has collided with the edge of the window
+	void checkCollisionWithEdges()
+	{
+		if (snake.body[0].x == cellCount ||
+			snake.body[0].x == -1 ||
+			snake.body[0].y == cellCount ||
+			snake.body[0].y == -1)
+			gameOver();
+	}
+	
+	// check if the snake collides with itself
+	void checkCollisionWithTail()
+	{
+		std::deque<Vector2> headlessBody = snake.body;
+		headlessBody.pop_front();
+		if (elementInDeque(snake.body[0], headlessBody))
+			gameOver();
+	}
+
+	void gameOver()
+	{
+		snake.reset();
+		food.position = food.generateRandomPos(snake.body);
+		running = false;
+	}
+
 };
 
 int main()
 {
-	std::cout.flush();
-	std::cout << "Starting the game..." << '\n';
-
 	InitWindow(cellSize * cellCount, cellSize * cellCount, "raylib Snake");
 	SetTargetFPS(60);
 
@@ -171,13 +207,25 @@ int main()
 		// control the snake with keys
 		// prevent the snake from moving in the opposite direction
 		if (IsKeyPressed(KEY_W) && game.snake.direction.y != 1)
+		{
 			game.snake.direction = { 0,-1 };
+			game.running = true;
+		}
 		if (IsKeyPressed(KEY_S) && game.snake.direction.y != -1)
+		{
 			game.snake.direction = { 0, 1 };
+			game.running = true;
+		}
 		if (IsKeyPressed(KEY_A) && game.snake.direction.x != 1)
+		{
 			game.snake.direction = { -1, 0 };
+			game.running = true;
+		}
 		if (IsKeyPressed(KEY_D) && game.snake.direction.x != -1)
+		{
 			game.snake.direction = { 1, 0 };
+			game.running = true;
+		}
 
 
 		// drawing
